@@ -1,0 +1,113 @@
+package au.edu.curtin.solrDataExtract12;
+
+import java.sql.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.google.protobuf.TextFormat.ParseException;
+
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.SentimentAnnotatedTree;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.CoreMap;
+
+
+public class ICONIP{
+	
+	static StanfordCoreNLP pipeline = null;
+	static String scoreStr;
+    public static void init() 
+    {
+    	// set up pipeline properties
+        Properties props = new Properties();
+        // set the list of annotators to run
+        props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
+        // build pipeline
+        pipeline = new StanfordCoreNLP(props);
+        
+    }
+    
+    static String website;
+	public static void main(String[] args) throws IOException, ParseException{
+		    
+		init();
+    	try{  
+    		Class.forName("com.mysql.jdbc.Driver");  
+    		Connection con=DriverManager.getConnection(  
+    		"jdbc:mysql://hostname:port/database","database","password");  
+    		
+    		con.createStatement();  
+    		
+    		
+    		String pathToCsv = "F://media data//new data 2//50 Articles//50 Articles input.csv";
+    		String row;
+    		BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv)); 
+    		String[] content = new String[47];
+    		int i = 0;
+    		while ((row = csvReader.readLine()) != null && i <content.length) {  
+    			content[i] = row;
+    		    i++;
+    		}
+    		csvReader.close();  
+    		for (int k = 0 ; k<content.length;k++) {
+    			System.out.println(content[k].toString());
+    			
+    			String[] sentenceOfContent = getSentence(content[k]);
+        		for (int a=0 ; a < sentenceOfContent.length; a++)
+        		{
+
+        			String singleSentence = sentenceOfContent[a].toString();
+            			
+            		int score = sentiment(singleSentence);
+            		
+            		// the mysql insert statement
+            	    String query = " insert into article50 (sentence, sentiment_score, sentiment)"
+            	          + " values (?, ?, ?)";
+
+            	    // create the mysql insert preparedstatement
+            	    PreparedStatement preparedStmt = con.prepareStatement(query);
+            	    preparedStmt.setString (1, singleSentence);
+            	    preparedStmt.setInt (2, score);
+            	    preparedStmt.setString (3, scoreStr);
+            	    // execute the preparedstatement
+            	    preparedStmt.execute();
+
+            	    System.out.println("sucess");
+            			
+        		}
+    			
+    			
+    		}	
+    	con.close(); 
+	    }catch(Exception e){ System.out.println(e);}  
+	}
+	private static String[] getSentence(String content) throws IOException {
+
+		String[]sentenceOfContent = content.split("[\\r?\\n\\|\\.]+");
+
+		return sentenceOfContent;
+
+	}
+	public static int sentiment(String singleSentence) throws IOException
+	{
+	int score = 2; // Default as Neutral. 1 = Negative, 2 = Neutral, 3 = Positive
+
+	Annotation annotation = pipeline.process(singleSentence);
+	for(CoreMap sentence : annotation.get(CoreAnnotations.SentencesAnnotation.class))
+	{
+	scoreStr = sentence.get(SentimentCoreAnnotations.SentimentClass.class);
+	Tree tree = sentence.get(SentimentAnnotatedTree.class);
+	score = RNNCoreAnnotations.getPredictedClass(tree);
+	System.out.println(scoreStr + "\t" + score + "\t" + sentence);
+
+	}
+	return score;
+    }
+
+}
