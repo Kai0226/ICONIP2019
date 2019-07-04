@@ -4,4 +4,4 @@ Code and dataset for ICONIP2019
 2. The sentiment analysis code by using Google Cloud sentiment analysis is: 'Google Cloud Sentiment Analysis Code'
 3. The code for generating grand truth is: 'Grand Truth Code'
 4. The LSTM model code: 'LSTM Code'. The dataset is in file 'input/sentimentdataset/train2'
-5. The BERT model code: '
+5. The BERT model code: 'BERT Code'. The dataset is in file 'BERTinput'
