@@ -1,0 +1,31 @@
+import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
+
+data = pd.read_csv('truth.csv')
+# Keeping only the neccessary columns
+data = data[['sentiment_Stanford', 'sentiment_Google Cloud', 'sentiment_Monkey Learn']]
+
+stanford = data['sentiment_Stanford']
+googleCloud = data['sentiment_Google Cloud']
+monkeyLearn = data ['sentiment_Monkey Learn']
+sentiment = []
+a= 1443
+for i in range(a):
+    if all([stanford[i] == googleCloud[i], googleCloud[i] == monkeyLearn[i]]):
+        sentiment.append(stanford[i])
+    elif (stanford[i] == googleCloud[i]):
+        sentiment.append(stanford[i])
+    elif (googleCloud[i] == monkeyLearn[i]):
+        sentiment.append(googleCloud[i])
+    elif (stanford[i] == monkeyLearn[i]):
+        sentiment.append(stanford[i])
+    else:
+        sentiment.append(stanford[i])
+
+import csv
+from itertools import zip_longest
+d = [sentiment]
+export_data = zip_longest(*d, fillvalue = '')
+with open('output/truthOutput.csv', 'w') as myfile:
+      wr = csv.writer(myfile)
+      wr.writerows(export_data)
+myfile.close()
