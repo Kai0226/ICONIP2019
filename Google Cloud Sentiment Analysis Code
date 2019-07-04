@@ -1,0 +1,54 @@
+# Imports the Google Cloud client library
+from google.cloud import language
+from google.cloud.language import enums
+from google.cloud.language import types
+import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
+import mysql.connector
+
+# Instantiates a client
+client = language.LanguageServiceClient()
+
+
+data = pd.read_csv('input/50ArticleInput.csv')
+data = data[['id', 'sentence']]
+sentence = data['sentence']
+id = 1
+sentimentOut = []
+a= 1444
+for i in range(a):
+    # Do something here
+    print(sentence[i])
+    text = sentence[i]
+
+    document = types.Document(
+        content=text,
+        type=enums.Document.Type.PLAIN_TEXT)
+
+    # Detects the sentiment of the text
+    sentiment = client.analyze_sentiment(document=document).document_sentiment
+
+    print('Text: {}'.format(text))
+    print('Sentiment: {}, {}'.format(sentiment.score, sentiment.magnitude))
+
+
+    if (sentiment.score < -0.25):
+        s = 'negative'
+        sentimentOut.append(s)
+        print("negative")
+    elif (sentiment.score > 0.25):
+        s = 'positive'
+        sentimentOut.append(s)
+        print("positive")
+    else :
+        s = 'neutral'
+        sentimentOut.append(s)
+        print("neutral")
+
+import csv
+from itertools import zip_longest
+d = [sentimentOut]
+export_data = zip_longest(*d, fillvalue = '')
+with open('output/50 Atricle with Stanford Sentiment.csv', 'w') as myfile:
+      wr = csv.writer(myfile)
+      wr.writerows(export_data)
+myfile.close()
